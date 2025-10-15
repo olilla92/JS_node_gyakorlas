@@ -5,13 +5,23 @@ import jwt from "jsonwebtoken";
 
 const router = Router();
 
-router.get("/", (req, res) => {
+// router.get("/", (req, res) => {
+//   res.send("USERS");
+// });
+
+router.get("/", auth, (req, res) => {
   const users = Users.getUsers();
   res.status(200).json(users);
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", auth, (req, res) => {
   const user = Users.getUsertById(+req.params.id);
+  if (!user) return res.status(404).json({ message: "User not fount!" });
+  res.status(200).json(user);
+});
+
+router.get("/me", auth, (req, res) => {
+  const user = Users.getUsertById(+req.userId);
   if (!user) return res.status(404).json({ message: "User not fount!" });
   res.status(200).json(user);
 });
@@ -28,7 +38,7 @@ router.post("/register", (req, res) => {
   res.status(201).json(user);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", auth, (req, res) => {
   const id = +req.params.id;
   let user = Users.getUsertById(id);
   if (!user) return res.status(404).json({ message: "User not fount!" });
@@ -42,7 +52,7 @@ router.put("/:id", (req, res) => {
   res.status(200).json(user);
 });
 
-router.patch("/:id", (req, res) => {
+router.patch("/:id", auth, (req, res) => {
   const id = +req.params.id;
   let user = Users.getUsertById(id);
   if (!user) return res.status(404).json({ message: "User not fount!" });
@@ -62,10 +72,12 @@ router.patch("/:id", (req, res) => {
   res.status(200).json(user);
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", auth, (req, res) => {
   const user = Users.getUsertById(+req.params.id);
   if (!user) return res.status(404).json({ message: "User not fount!" });
   Users.deleteUser(+req.params.id);
+  delete req.userId;
+  delete req.headers.authorization
   res.status(200).json({ message: "Delete successful!" });
 });
 
@@ -73,17 +85,33 @@ router.delete("/:id", (req, res) => {
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
-    return res.status(401).json({ message: "Invalid credentials!" });
+    return res.status(401).json({ message: "Invalid credentials! 1" });
+  
   const user = Users.getUserByEmail(email);
-  if (!user) return res.status(401).json({ message: "Invalid credentials!" });
-  if (!bcrypt.compareSync(password, user.password))
-    return res.status(401).json({ message: "Invalid credentials!" });
+  console.log(user)
+  if (!user) return res.status(401).json({ message: "Invalid credentials! 2" });
+  // if (!bcrypt.compareSync(password, user.password))
+  //   return res.status(401).json({ message: "Invalid credentials!" });
   req.userId = user.id;
-  const token = jwt.sign({ id: user.id }, "secret_key", { expiresIn: "30m" });
+  const token = jwt.sign({ id: user.id, email: user.email }, "secret_key", {
+    expiresIn: "30m",
+  });
   res.status(200).json(token);
 });
 
-//autentikáció
-function auth(req, res, next) {}
+//autentikáció, loginhoz hasonlít leginkább, | auth | -> autentikáció szükséges az adatok megtekintéséhez
+export function auth(req, res, next) {
+  console.log("In auth");
+  const accessToken = req.headers.authorization;
+  if (!accessToken) return res.status(401).json({ message: "Unauthorized" });
+  const token = accessToken.split(" ")[1];
+  const data = jwt.verify(token, "secret_key");
+  const now = Math.floor(Date.now() / 1000);
+  if (data?.exp < now)
+    return res.status(403).json({ message: "Token expired" });
+  console.log(data.id);
+  req.userId = data.id; //userId lementése
+  next();
+}
 
 export default router;
