@@ -5,7 +5,7 @@ import { auth } from "./usersRoutes.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", auth, (req, res) => {
   const posts = Posts.getPosts();
   res.status(200).json(posts);
 });

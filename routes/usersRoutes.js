@@ -77,7 +77,7 @@ router.delete("/:id", auth, (req, res) => {
   if (!user) return res.status(404).json({ message: "User not fount!" });
   Users.deleteUser(+req.params.id);
   delete req.userId;
-  delete req.headers.authorization
+  delete req.headers.authorization;
   res.status(200).json({ message: "Delete successful!" });
 });
 
@@ -86,9 +86,9 @@ router.post("/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(401).json({ message: "Invalid credentials! 1" });
-  
+
   const user = Users.getUserByEmail(email);
-  console.log(user)
+  console.log(user);
   if (!user) return res.status(401).json({ message: "Invalid credentials! 2" });
   // if (!bcrypt.compareSync(password, user.password))
   //   return res.status(401).json({ message: "Invalid credentials!" });
