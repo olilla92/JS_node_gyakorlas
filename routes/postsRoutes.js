@@ -10,7 +10,7 @@ router.get("/", auth, (req, res) => {
   res.status(200).json(posts);
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", auth, (req, res) => {
   const post = Posts.getPostById(+req.params.id);
   if (!post) return res.status(404).json({ message: "Post not found" });
   const user = Users.getUsertById(post.userId);
@@ -33,7 +33,20 @@ router.post("/", auth, (req, res) => {
   res.status(200).json(post);
 });
 
-router.patch("/:id", (req, res) => {
+router.put("/:id", auth, (req, res) => {
+  const id = +req.params.id;
+  let post = Posts.getPostById(id);
+  if (!post) return res.status(404).json({ message: "Post not found!" });
+  const {userId, title, content } = req.body;
+  if (!userId || !title || !content)
+    return res.status(400).json({ message: "Missing some data!" });
+  Posts.updatePost(id, userId, title, content);
+  post = Posts.getPostById(id);
+  res.status(200).json(post);
+
+});
+
+router.patch("/:id", auth, (req, res) => {
   const id = +req.params.id;
   let post = Posts.getPostById(id);
   if (!post) return res.status(404).json({ message: "Post not found!" });

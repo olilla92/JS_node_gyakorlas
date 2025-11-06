@@ -20,11 +20,11 @@ router.get("/:id", auth, (req, res) => {
   res.status(200).json(user);
 });
 
-router.get("/me", auth, (req, res) => {
-  const user = Users.getUsertById(+req.userId);
-  if (!user) return res.status(404).json({ message: "User not fount!" });
-  res.status(200).json(user);
-});
+// router.get("/me", auth, (req, res) => {
+//   const user = Users.getUsertById(+req.userId);
+//   if (!user) return res.status(404).json({ message: "User not fount!" });
+//   res.status(200).json(user);
+// });
 
 router.post("/register", (req, res) => {
   const { name, email, password } = req.body;
@@ -81,7 +81,7 @@ router.delete("/:id", auth, (req, res) => {
   res.status(200).json({ message: "Delete successful!" });
 });
 
-//tokennel:   npm i jsonwebtoken  telemítése
+//tokennel:   npm i jsonwebtoken  telepítése
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
